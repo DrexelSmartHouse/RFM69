@@ -18,40 +18,58 @@
  * 
  * Custom:
  * 
- * 0x20 - EVENT, this packet contains data (string and a float)
- * 		  but was not requested.
- *
- * 0x10 - PING, this is a ping request. Response is a simple ack 
- *
- * 0x08 - ERROR, this packet contains an error message
- *
- * 0x04 - REQ, this packet contains a request. Response is either
+ * 0x20 - REQ, this packet contains a request. Response is either
  * 		  data or and error. The response must be terminated with
- * 		  a done packet. All nodes must handle the "ALL" request
- * 0x02 - DATA, this packet contains data (string and a float)
+ * 		  a done packet. Empty request means all data. 
  *
- * 0x01 - END, this is an empty packet the marks the
+ * 0x10 - END, this is an empty packet the marks the
  * 		  end of a variable length response
+ *
+ * 0x08 - EVENT, (NOT YET IMPLEMENTED) this packet means that an asyn event happen
+ * 		  and needs to be handled ASAP.
+ *
+ * 0x04 - STR, packet is a null term string
+ *
+ * 0x02 - SEN_DATA, packet is a SensorData struct
+ *
+ * NOTE: if 0x04 and 0x02 are both set then the an error occured (0x06)
+ *
+ * 0x01 - undefined bit
+ *
  */
 
-const uint8_t RFM69_CTL_EVENT = 0x20;
-const uint8_t RFM69_CTL_PING = 0x10;
-const uint8_t RFM69_CTL_ERROR = 0x08;
-const uint8_t RFM69_CTL_REQ = 0x04;
-const uint8_t RFM69_CTL_DAT = 0x02;
-const uint8_t RFM69_CTL_EN = 0x01;
+const uint8_t RFM69_CTL_REQ = 0x20;
+const uint8_t RFM69_CTL_END = 0x10;
+const uint8_t RFM69_CTL_EVENT = 0x08;
+const uint8_t RFM69_CTL_STR = 0x04;
+const uint8_t RFM69_CTL_SEN_DATA = 0x02;
+
+// both data bits are one means there is an error
+const uint8_t RFM69_CTL_ERROR = RFM69_CTL_STR | RFM69_CTL_SEN_DATA; // 0x06
+
 
 // the node that all sensor nodes transmit to
 const uint8_t GATEWAY_ID = 0;
 
+
+/* Data Types */
+
 // The max length of the string contained in a Data struct
 // This INCLUDES the null char. Be careful!
-const uint8_t MAX_DATA_STR_LEN = 10;
+const uint8_t MAX_SENSOR_NAME_LEN = 10;
 
-// data contained in an EVENT or a DATA packet
-struct Data {
-  char str[MAX_DATA_STR_LEN];
+typedef char[MAX_SENSOR_NAME_LEN] SensorName;
+
+//SEN_DATA packet
+struct SensorData {
+  SensorName sensor_name;
   float data;
 };
+
+// STR packet
+typedef char* StrPacket;
+
+//Error packet
+typedef char* ErrorPacket;
 
 #endif /*DSH_H*/
