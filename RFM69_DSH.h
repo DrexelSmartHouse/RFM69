@@ -2,6 +2,7 @@
 #define RFM69_DSH_H
 
 #include <RFM69.h>
+#include <string.h>
 
 /* rfm69 setup */
 #define FREQUENCY RF69_915MHZ
@@ -44,7 +45,7 @@ const uint8_t RFM69_CTL_STR_PACKET      = 0x04;
 const uint8_t RFM69_CTL_SEN_DATA_PACKET = 0x02;
 
 // both data bits are one means there is an error
-const uint8_t RFM69_CTL_ERROR = RFM69_CTL_STR | RFM69_CTL_SEN_DATA; // 0x06
+const uint8_t RFM69_CTL_ERROR = RFM69_CTL_STR_PACKET | RFM69_CTL_SEN_DATA_PACKET; // 0x06
 
 
 // the node that all sensor nodes transmit to
@@ -57,11 +58,9 @@ const uint8_t GATEWAY_ID = 0;
 // This INCLUDES the null char. Be careful!
 const uint8_t MAX_SENSOR_NAME_LEN = 10;
 
-typedef char[MAX_SENSOR_NAME_LEN] SensorName;
-
 //SEN_DATA packet
 struct SensorData {
-  SensorName sensor_name;
+  char sensor_name[MAX_SENSOR_NAME_LEN];
   float data;
 };
 
@@ -72,7 +71,6 @@ typedef char* StrPacket;
 typedef char* ErrorPacket;
 
 class RFM69_DSH: public RFM69 {
-
 public:
 	
 	// original constructor with RFM69HW as the default
@@ -83,12 +81,27 @@ public:
 	//TODO easy to use init functions for gateway and sensor node
 	
 
-	// Easy to use interface for received data
-	bool errorReceived() const ( return ERROR_RECEIVED; } 
+	/* Receiving */
+	
+	// this must be called after the data is received
+	// TODO: check for recieveDone()
+	bool errorReceived() const { return ERROR_RECEIVED; }
 	bool strReceived() const { return STR_PACKET_RECEIVED && !errorReceived(); }
 	bool sensorDataReceived() const { return SENSOR_DATA_PACKET_RECEIVED && !errorReceived(); }
 	bool endReceived() const { return END_RECEIVED; }
 	bool eventReceived() const { return EVENT_RECEIVED; }
+	bool requestReceived() const { return DATA_REQUESTED; }
+	// all data is requested when an empty request packet is received
+	bool requestAllReceived() const { return DATA_REQUESTED && (DATALEN == 0); }
+
+
+	/* Sending data */
+	
+	// NOTE: the sensor name has a max length and will get cut off
+	// if it exceeds this length
+	bool sendSensorData(const String& sensor_name, float data, uint8_t receiver_id=GATEWAY_ID);
+	bool sendString(const String& str, uint8_t receiver_id=GATEWAY_ID);
+
 
 	// new flags for the added CTL bits
 	// naming convention was used to keep consistent with lib
@@ -100,20 +113,21 @@ public:
 	static volatile uint8_t ERROR_RECEIVED;
 	
 	// vars to hold the received data
-	static volatile String RECEIVED_STRING;
-	static volatile SensorData RECEIVED_SENSOR_DATA;
+	String RECEIVED_STRING;
+	SensorData RECEIVED_SENSOR_DATA;
 
 
 protected:
 
-	// custom sendFrame function for sending different CTL bits
-	void sendFrame(uint8_t toAddress, const void* buffer, uint8_t size, uint8_t CTLbyte);
-
 	// override the interruptHook
 	virtual void interruptHook(uint8_t CTLbyte);
+	
+	// custom sendFrame function for sending different CTL bits
+	void sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte);
 
 
 
-}
+
+};
 
 #endif /* RFM69_DSH_H */

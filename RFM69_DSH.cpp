@@ -1,7 +1,18 @@
-#include "RFM69_DSH.h"
+#include <RFM69_DSH.h>
+
+#include <RFM69.h>
+#include <RFM69registers.h>
+#include <SPI.h>
+
+volatile uint8_t RFM69_DSH::DATA_REQUESTED;
+volatile uint8_t RFM69_DSH::END_RECEIVED;
+volatile uint8_t RFM69_DSH::EVENT_RECEIVED;
+volatile uint8_t RFM69_DSH::STR_PACKET_RECEIVED;
+volatile uint8_t RFM69_DSH::SENSOR_DATA_PACKET_RECEIVED;
+volatile uint8_t RFM69_DSH::ERROR_RECEIVED;
 
 //internal send function that accepts a CTLbyte
-void RFM69_DSH::sendFrame(uint8_t toAddress, const void* buffer, uint8_t size, uint8_t CTLbyte) {
+void RFM69_DSH::sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte) {
 
 	// most of this is the original function except
 	// that the CTL byte is now an input
@@ -33,13 +44,13 @@ void RFM69_DSH::sendFrame(uint8_t toAddress, const void* buffer, uint8_t size, u
 
 
 // method is called when a new packet is received
-virtual void RFM69_DSH::interruptHook(uint8_t CTLbyte) {
+void RFM69_DSH::interruptHook(uint8_t CTLbyte) {
 
 	// the first two bits are handled by the lib
 	// these are the ack received and requested bits
 	
 	//set all the flags based on the CTL byte
-	DATA_REQUESTED = CTLByte & RFM69_CTL_DATA_REQ;
+	DATA_REQUESTED = CTLbyte & RFM69_CTL_DATA_REQ;
 	END_RECEIVED   = CTLbyte & RFM69_CTL_SEND_END;
 	EVENT_RECEIVED = CTLbyte & RFM69_CTL_EVENT;
 	STR_PACKET_RECEIVED = CTLbyte & RFM69_CTL_STR_PACKET;
