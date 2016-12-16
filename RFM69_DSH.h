@@ -1,5 +1,5 @@
-#ifndef DSH_H
-#define DSH_H
+#ifndef RFM69_DSH_H
+#define RFM69_DSH_H
 
 #include <RFM69.h>
 
@@ -71,4 +71,49 @@ typedef char* StrPacket;
 //Error packet
 typedef char* ErrorPacket;
 
-#endif /*DSH_H*/
+class RFM69_DSH: public RFM69 {
+
+public:
+	
+	// original constructor with RFM69HW as the default
+	RFM69_DSH(uint8_t slaveSelectPin=RF69_SPI_CS, uint8_t interruptPin=RF69_IRQ_PIN, bool isRFM69HW=true, uint8_t interruptNum=RF69_IRQ_NUM) :
+		RFM69(slaveSelectPin, interruptPin, isRFM69HW, interruptNum) {
+	}
+
+	//TODO easy to use init functions for gateway and sensor node
+	
+
+	// Easy to use interface for received data
+	bool errorReceived() const ( return ERROR_RECEIVED; } 
+	bool strReceived() const { return STR_PACKET_RECEIVED && !errorReceived(); }
+	bool sensorDataReceived() const { return SENSOR_DATA_PACKET_RECEIVED && !errorReceived(); }
+	bool endReceived() const { return END_RECEIVED; }
+	bool eventReceived() const { return EVENT_RECEIVED; }
+
+	// new flags for the added CTL bits
+	// naming convention was used to keep consistent with lib
+	static volatile uint8_t DATA_REQUESTED;
+	static volatile uint8_t END_RECEIVED;
+	static volatile uint8_t EVENT_RECEIVED;
+	static volatile uint8_t STR_PACKET_RECEIVED;
+	static volatile uint8_t SENSOR_DATA_PACKET_RECEIVED;
+	static volatile uint8_t ERROR_RECEIVED;
+	
+	// vars to hold the received data
+	static volatile String RECEIVED_STRING;
+	static volatile SensorData RECEIVED_SENSOR_DATA;
+
+
+protected:
+
+	// custom sendFrame function for sending different CTL bits
+	void sendFrame(uint8_t toAddress, const void* buffer, uint8_t size, uint8_t CTLbyte);
+
+	// override the interruptHook
+	virtual void interruptHook(uint8_t CTLbyte);
+
+
+
+}
+
+#endif /* RFM69_DSH_H */
