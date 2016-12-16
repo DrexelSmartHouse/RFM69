@@ -100,19 +100,19 @@ public:
 	// NOTE: the sensor name has a max length and will get cut off
 	// if it exceeds this length
 	bool sendSensorReading(const String& sensorType, float data, uint8_t receiverId=GATEWAY_ID);
-	bool sendString(const String& str, uint8_t receiverId=GATEWAY_ID);
-	bool sendDone(uint8_t receiverId=GATEWAY_ID);
-	bool sendError(const String& errorMSg, uint8_t receiverId=GATEWAY_ID);
+	//bool sendString(const String& str, uint8_t receiverId=GATEWAY_ID);
+	bool sendEnd(uint8_t receiverId=GATEWAY_ID);
+	//bool sendError(const String& errorMSg, uint8_t receiverId=GATEWAY_ID);
 
 
 	/* requests */
 	
 	// request data. returns true after ack NOT after all data is received
 	bool requestAll(uint8_t nodeId);
-	bool request(String sensorType, uint8_t nodeId);
+	//bool request(String sensorType, uint8_t nodeId);
 
 	// sends only one request for ack and returns true if its received
-	bool ping();
+	bool ping(uint8_t nodeId);
 
 	// new flags for the added CTL bits
 	// naming convention was used to keep consistent with lib
@@ -123,21 +123,28 @@ public:
 	static volatile uint8_t SENSOR_DATA_PACKET_RECEIVED;
 	static volatile uint8_t ERROR_RECEIVED;
 	
-	// vars to hold the received data
-	String RECEIVED_STRING;
-	SensorReading RECEIVED_SENSOR_DATA;
-
-
 protected:
+
+	// vars to hold the received data
+	String _receivedString;
+	SensorReading _receivedSensorReading;
+
+	bool getSensorReading();
+
+	//bool getReceivedString();
 
 	// override the interruptHook
 	virtual void interruptHook(uint8_t CTLbyte);
 	
+	void send(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte);
+
 	// sendFrame function for sending different CTL bits
 	void sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte);
 
 	// allows for custom CTL injection  
 	bool sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte, uint8_t retries=2, uint8_t retryWaitTime=40);
+
+
 
 
 
