@@ -11,6 +11,37 @@ volatile uint8_t RFM69_DSH::STR_PACKET_RECEIVED;
 volatile uint8_t RFM69_DSH::SENSOR_DATA_PACKET_RECEIVED;
 volatile uint8_t RFM69_DSH::ERROR_RECEIVED;
 
+
+
+
+bool RFM69_DSH::sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte, uint8_t retries=2, uint8_t retryWaitTime=40) {
+
+  uint32_t sentTime;
+
+  // add the req ack bit
+  CTLbyte = CTLbyte | RFM69_CTL_REQACK;
+
+  for (uint8_t i = 0; i <= retries; i++) {
+
+	RFM69_DSH::sendFrame(toAddress, buffer, bufferSize, CTLbyte);
+    sentTime = millis();
+
+    while (millis() - sentTime < retryWaitTime) {
+
+      if (ACKReceived(toAddress)) {
+        //Serial.print(" ~ms:"); Serial.print(millis() - sentTime);
+        return true;
+      }
+
+    }
+    //Serial.print(" RETRY#"); Serial.println(i + 1);
+
+  }
+
+  return false;
+	
+}
+
 //internal send function that accepts a CTLbyte
 void RFM69_DSH::sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte) {
 
