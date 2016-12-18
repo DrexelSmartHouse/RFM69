@@ -45,7 +45,7 @@
 #define RFM69_CTL_SEN_DATA_PACKET 0x02
 
 // both data bits are one means there is an error
-const uint8_t RFM69_CTL_ERROR = RFM69_CTL_STR_PACKET | RFM69_CTL_SEN_DATA_PACKET; // 0x06
+#define RFM69_CTL_ERROR (RFM69_CTL_STR_PACKET | RFM69_CTL_SEN_DATA_PACKET) // 0x06
 
 
 // the node that all sensor nodes transmit to
@@ -56,7 +56,7 @@ const uint8_t RFM69_CTL_ERROR = RFM69_CTL_STR_PACKET | RFM69_CTL_SEN_DATA_PACKET
 
 // The max length of the string contained in a Data struct
 // This INCLUDES the null char. Be careful!
-const uint8_t MAX_SENSOR_TYPE_LEN = 10;
+#define MAX_SENSOR_TYPE_LEN 10
 
 //SEN_DATA packet
 struct SensorReading {
