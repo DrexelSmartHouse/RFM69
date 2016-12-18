@@ -38,18 +38,18 @@
  *
  */
 
-const uint8_t RFM69_CTL_DATA_REQ        = 0x20;
-const uint8_t RFM69_CTL_SEND_END        = 0x10;
-const uint8_t RFM69_CTL_EVENT           = 0x08;
-const uint8_t RFM69_CTL_STR_PACKET      = 0x04;
-const uint8_t RFM69_CTL_SEN_DATA_PACKET = 0x02;
+#define RFM69_CTL_DATA_REQ        0x20
+#define RFM69_CTL_SEND_END        0x10
+#define RFM69_CTL_EVENT           0x08
+#define RFM69_CTL_STR_PACKET      0x04
+#define RFM69_CTL_SEN_DATA_PACKET 0x02
 
 // both data bits are one means there is an error
 const uint8_t RFM69_CTL_ERROR = RFM69_CTL_STR_PACKET | RFM69_CTL_SEN_DATA_PACKET; // 0x06
 
 
 // the node that all sensor nodes transmit to
-const uint8_t GATEWAY_ID = 0;
+#define GATEWAY_ID 0
 
 
 /* Data Types */
@@ -104,7 +104,6 @@ public:
 	bool sendEnd(uint8_t receiverId=GATEWAY_ID);
 	//bool sendError(const String& errorMSg, uint8_t receiverId=GATEWAY_ID);
 
-
 	/* requests */
 	
 	// request data. returns true after ack NOT after all data is received
@@ -143,10 +142,6 @@ protected:
 
 	// allows for custom CTL injection  
 	bool sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte, uint8_t retries=2, uint8_t retryWaitTime=40);
-
-
-
-
 
 };
 
