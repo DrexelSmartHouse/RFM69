@@ -64,12 +64,6 @@ struct SensorReading {
   float data;
 };
 
-// STR packet
-typedef char* RawStrPacket;
-
-//Error packet
-typedef char* RawErrorPacket;
-
 class RFM69_DSH: public RFM69 {
 public:
 	
@@ -100,9 +94,9 @@ public:
 	// NOTE: the sensor name has a max length and will get cut off
 	// if it exceeds this length
 	bool sendSensorReading(const String& sensorType, float data, uint8_t receiverId=GATEWAY_ID);
-	//bool sendString(const String& str, uint8_t receiverId=GATEWAY_ID);
+	//TODO: bool sendString(const String& str, uint8_t receiverId=GATEWAY_ID);
 	bool sendEnd(uint8_t receiverId=GATEWAY_ID);
-	//bool sendError(const String& errorMSg, uint8_t receiverId=GATEWAY_ID);
+	//TODO: bool sendError(const String& errorMSg, uint8_t receiverId=GATEWAY_ID);
 
 	/* requests */
 	
@@ -122,11 +116,11 @@ public:
 	static volatile uint8_t SENSOR_DATA_PACKET_RECEIVED;
 	static volatile uint8_t ERROR_RECEIVED;
 	
-protected:
-
 	// vars to hold the received data
-	String _receivedString;
-	SensorReading _receivedSensorReading;
+	String RECEIVED_STR;
+	SensorReading SENSOR_READING;
+
+protected:
 
 	bool getSensorReading();
 

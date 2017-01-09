@@ -29,14 +29,13 @@ bool RFM69_DSH::sendSensorReading(const String& sensorType, float data, uint8_t 
 
 bool RFM69_DSH::getSensorReading() {
 	// check to make sure the packet is the right length
-	// don't send ack if its not the right data
 	if (DATALEN != sizeof(SensorReading)) {
 		//return "ERROR: DATA LENGTH";
 		return false;
 	}
 
 	// cast byte array back into struct
-	_receivedSensorReading = *((SensorReading*)DATA);
+	SENSOR_READING = *((SensorReading*)DATA);
 
 	return true;
 
@@ -137,7 +136,7 @@ void RFM69_DSH::interruptHook(uint8_t CTLbyte) {
 	EVENT_RECEIVED = CTLbyte & RFM69_CTL_EVENT;
 	STR_PACKET_RECEIVED = CTLbyte & RFM69_CTL_STR_PACKET;
 	SENSOR_DATA_PACKET_RECEIVED = CTLbyte & RFM69_CTL_SEN_DATA_PACKET;
-	ERROR_RECEIVED = CTLbyte & RFM69_CTL_ERROR;
+	ERROR_RECEIVED = STR_PACKET_RECEIVED && DATA_REQUESTED;
 
 	if ( sensorDataReceived() ) getSensorReading(); 
 
