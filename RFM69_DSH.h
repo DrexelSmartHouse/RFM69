@@ -81,7 +81,14 @@ public:
 	// TODO: check for receiveDone()
 	bool errorReceived() const { return ERROR_RECEIVED; }
 	bool strReceived() const { return STR_PACKET_RECEIVED && !errorReceived(); }
-	bool sensorDataReceived() const { return SENSOR_DATA_PACKET_RECEIVED && !errorReceived(); }
+
+	// must be called to make SENSOR READING valid
+	bool sensorDataReceived() const {
+		if (SENSOR_DATA_PACKET_RECEIVED && !errorReceived())
+			return getSensorReading();
+		return false;
+	}
+
 	bool endReceived() const { return END_RECEIVED; }
 	bool eventReceived() const { return EVENT_RECEIVED; }
 	bool requestReceived() const { return DATA_REQUESTED; }
@@ -117,7 +124,7 @@ public:
 	static volatile uint8_t ERROR_RECEIVED;
 	
 	// vars to hold the received data
-	String RECEIVED_STR;
+	//String RECEIVED_STR;
 	SensorReading SENSOR_READING;
 
 protected:

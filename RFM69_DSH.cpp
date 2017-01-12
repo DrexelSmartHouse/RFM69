@@ -19,18 +19,22 @@ bool RFM69_DSH::sendSensorReading(const String& sensorType, float data, uint8_t 
 
 	//create a local SensorReading
 	SensorReading senRead;
-	strncpy(senRead.sensorType, senTypeCharArr, strlen(senTypeCharArr));
+	strncpy(senRead.sensorType, senTypeCharArr, strlen(senTypeCharArr)+1);
 	senRead.data = data;
 
+	//Serial.print("The sensor type:");
+	//Serial.println(senRead.sensorType);
+
 	// atmept to send and return the result
-	return RFM69_DSH::sendWithRetry(receiverId, (const void*)(&senRead), sizeof(SensorReading), RFM69_CTL_SEN_DATA_PACKET);
+	return RFM69_DSH::sendWithRetry(receiverId, (const void*)(&senRead), sizeof(SensorReading), RFM69_CTL_SEN_DATA_PACKET, 1);
 	
 }
 
 bool RFM69_DSH::getSensorReading() {
 	// check to make sure the packet is the right length
 	if (DATALEN != sizeof(SensorReading)) {
-		//return "ERROR: DATA LENGTH";
+		//Serial.print("Um this is odd. The data length isnt right: ");
+		//Serial.println(DATALEN);
 		return false;
 	}
 
@@ -130,14 +134,12 @@ void RFM69_DSH::interruptHook(uint8_t CTLbyte) {
 	// the first two bits are handled by the lib
 	// these are the ack received and requested bits
 
-	//set all the flags based on the CTL byte
+	// set all the flags based on the CTL byte
 	DATA_REQUESTED = CTLbyte & RFM69_CTL_DATA_REQ;
 	END_RECEIVED   = CTLbyte & RFM69_CTL_SEND_END;
 	EVENT_RECEIVED = CTLbyte & RFM69_CTL_EVENT;
 	STR_PACKET_RECEIVED = CTLbyte & RFM69_CTL_STR_PACKET;
 	SENSOR_DATA_PACKET_RECEIVED = CTLbyte & RFM69_CTL_SEN_DATA_PACKET;
 	ERROR_RECEIVED = STR_PACKET_RECEIVED && DATA_REQUESTED;
-
-	if ( sensorDataReceived() ) getSensorReading(); 
 
 }
