@@ -5,10 +5,12 @@ RFM69_DSH dsh_radio;
 
 const uint8_t network_id = 0;
 
+volatile bool receiving = false;
+
 void setup()
 {
 	Serial.begin(9600);
- 
+
 	dsh_radio.initialize(RF69_915MHZ, GATEWAY_ID, network_id);
 	dsh_radio.setHighPower();
 
@@ -24,15 +26,21 @@ void setup()
 			Serial.println(": FAILED");
 		}
 	}
-dsh_radio.requestAll(1);
+
+
 
 }
 
 void loop()
 {
-  
 
-	//delay(15);
+  	// check to see if were in the middle of a transmission 
+  	// otherwise request all the data from the node
+  	if (!receiving) {
+    	delay(2000);
+    	dsh_radio.requestAll(1);
+    	receiving = true;
+  	}
 
 	if (dsh_radio.receiveDone()) {
 
@@ -41,9 +49,10 @@ void loop()
 		if (dsh_radio.errorReceived()) {
 			Serial.println("Error Received");
 		}
-		
+
 		if (dsh_radio.endReceived()) {
 			Serial.println("End Received");
+      		receiving = false;
 		}
 
 		if (dsh_radio.eventReceived()) {
