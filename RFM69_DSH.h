@@ -20,7 +20,8 @@
  * 
  * 0x20 - REQ, this packet contains a request. Response is either
  * 		  data or and error. The response must be terminated with
- * 		  a done packet. Empty request means all data. 
+ * 		  a END packet. 
+ * 		  NOTE: Empty request means all data. 
  *
  * 0x10 - END, this is an empty packet the marks the
  * 		  end of a variable length response
@@ -33,6 +34,7 @@
  * 0x02 - SEN_DATA, packet is a SensorReading struct
  *
  * NOTE: if 0x04 and 0x02 are both set then the an error occured (0x06)
+ * NOTE: An error is always a string
  *
  * 0x01 - undefined bit
  *
@@ -81,13 +83,7 @@ public:
 	// TODO: check for receiveDone()
 	bool errorReceived() const { return ERROR_RECEIVED; }
 	bool strReceived() const { return STR_PACKET_RECEIVED && !errorReceived(); }
-
-	// must be called to make SENSOR READING valid
-	bool sensorDataReceived() const {
-		if (SENSOR_DATA_PACKET_RECEIVED && !errorReceived())
-			return getSensorReading();
-		return false;
-	}
+	bool sensorDataReceived() const { return SENSOR_DATA_PACKET_RECEIVED && !errorReceived(); }
 
 	bool endReceived() const { return END_RECEIVED; }
 	bool eventReceived() const { return EVENT_RECEIVED; }
@@ -101,9 +97,9 @@ public:
 	// NOTE: the sensor name has a max length and will get cut off
 	// if it exceeds this length
 	bool sendSensorReading(const String& sensorType, float data, uint8_t receiverId=GATEWAY_ID);
-	//TODO: bool sendString(const String& str, uint8_t receiverId=GATEWAY_ID);
+	bool sendString(const String& str, uint8_t receiverId, uint8_t CTLbyte=RFM69_CTL_STR_PACKET);
 	bool sendEnd(uint8_t receiverId=GATEWAY_ID);
-	//TODO: bool sendError(const String& errorMSg, uint8_t receiverId=GATEWAY_ID);
+	bool sendError(const String& errorMsg, uint8_t receiverId);
 
 	/* requests */
 	
@@ -124,14 +120,26 @@ public:
 	static volatile uint8_t ERROR_RECEIVED;
 	
 	// vars to hold the received data
-	//String RECEIVED_STR;
+	String RECEIVED_STR;
 	SensorReading SENSOR_READING;
+
+	// getters for the received data
+	String getSensorType() const {return SENSOR_READING.sensorType;}
+	float getSensorData() const {return SENSOR_READING.data;}
+
+	String getReceivedStr() const {return RECEIVED_STR;}
 
 protected:
 
-	bool getSensorReading();
+	// functions used pop the first received bytes into
+	// the proper locations
+	// NOTE: DATA become invalid after this
+	void popSensorReading();
+	void popStrPacket();
 
-	//bool getReceivedString();
+	// called when there was an error parseing teh received data
+	// SETS all flags to zero
+	void receiveFail();
 
 	// override the interruptHook
 	virtual void interruptHook(uint8_t CTLbyte);
@@ -143,6 +151,7 @@ protected:
 
 	// allows for custom CTL injection  
 	bool sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte, uint8_t retries=2, uint8_t retryWaitTime=40);
+//private:
 
 };
 

@@ -30,18 +30,52 @@ bool RFM69_DSH::sendSensorReading(const String& sensorType, float data, uint8_t 
 	
 }
 
-bool RFM69_DSH::getSensorReading() {
+void RFM69_DSH::popSensorReading() {
 	// check to make sure the packet is the right length
 	if (DATALEN != sizeof(SensorReading)) {
-		//Serial.print("Um this is odd. The data length isnt right: ");
-		//Serial.println(DATALEN);
-		return false;
+		receiveFail();
+		return;
 	}
 
-	// cast byte array back into struct
+	// read in all of the bytes of the sensor reading
+	for (uint8_t i = 0; i < DATALEN; i++) {
+		DATA[i] = SPI.transfer(0);
+	}
+
+	// adjust the DATALEN to the new size 
+	// NOTE: DATA will be invalid after this function returns
+	// see RFM69::interruptHandler();
+	DATALEN -= sizeof(SensorReading);
+
+	// cast byte array into struct
 	SENSOR_READING = *((SensorReading*)DATA);
 
-	return true;
+}
+
+void RFM69_DSH::popStrPacket() {
+
+	// read in all of the bytes of the string 
+	for (uint8_t i = 0; i < DATALEN; i++) {
+		DATA[i] = SPI.transfer(0);
+	}
+
+	RECEIVED_STR = String((const char*)DATA);
+
+	if (RECEIVED_STR == NULL) receiveFail();
+}
+
+void RFM69_DSH::receiveFail() {
+	// for now dont send ack
+	// TODO: send an error back to the gateway
+	ACK_REQUESTED = 0;
+
+	// dsh flags
+	DATA_REQUESTED = 0;
+	END_RECEIVED = 0;
+	EVENT_RECEIVED = 0;
+	STR_PACKET_RECEIVED = 0;
+	SENSOR_DATA_PACKET_RECEIVED = 0;
+	ERROR_RECEIVED = 0;
 
 }
 
@@ -51,6 +85,22 @@ bool RFM69_DSH::requestAll(uint8_t nodeId) {
 
 bool RFM69_DSH::sendEnd(uint8_t receiverId=GATEWAY_ID) {
 	return RFM69_DSH::sendWithRetry(receiverId, NULL, 0, RFM69_CTL_SEND_END);
+}
+
+bool RFM69_DSH::sendString(const String& str, uint8_t receiverId, uint8_t CTLbyte=RFM69_CTL_STR_PACKET) {
+	
+	unsigned int c_str_length = str.length()+1;
+	
+	// trim the string if it is too large
+	if (c_str_length > RF69_MAX_DATA_LEN) {
+		str.substring(0, RF69_MAX_DATA_LEN-1);
+	}
+
+	return RFM69_DSH::sendWithRetry(receiverId, str.c_str(), str.length()+1, CTLbyte);
+}
+
+bool RFM69_DSH::sendError(const String& errorMsg, uint8_t receiverId) {
+	return RFM69_DSH::sendString(errorMsg, receiverId, RFM69_CTL_ERROR);
 }
 
 // simple message with no data but request an ack
@@ -141,5 +191,8 @@ void RFM69_DSH::interruptHook(uint8_t CTLbyte) {
 	STR_PACKET_RECEIVED = CTLbyte & RFM69_CTL_STR_PACKET;
 	SENSOR_DATA_PACKET_RECEIVED = CTLbyte & RFM69_CTL_SEN_DATA_PACKET;
 	ERROR_RECEIVED = STR_PACKET_RECEIVED && DATA_REQUESTED;
+	
+	if (STR_PACKET_RECEIVED) popStrPacket();
+	else if (SENSOR_DATA_PACKET_RECEIVED) popSensorReading();
 
 }
