@@ -9,7 +9,7 @@ volatile bool send_all = false;
 
 void setup()
 {
-	Serial.begin(9600);
+	Serial.begin(115200);
 
 	dsh_radio.initialize(RF69_915MHZ, node_id, network_id);
 	dsh_radio.setHighPower();
@@ -18,33 +18,33 @@ void setup()
 
 void loop()
 {
-  
+
 	if (dsh_radio.receiveDone()) {
 
 		Serial.println("Transmission Received");
 
 		if (dsh_radio.requestAllReceived())
-		  send_all = true;
-      
+		  	send_all = true;
+
 		if (dsh_radio.ACKRequested()) {
 			dsh_radio.sendACK();
 			Serial.println("ACK sent");
 		}
-   
+
 	}
-	
+
 	if (send_all) {
-    if (!sendAllSensorReadings())
-        Serial.println("Transmission Failed");
-        
-     send_all = false;
-  }
-  
+    	if (!sendAllSensorReadings())
+        	Serial.println("Transmission Failed");
+
+     	send_all = false;
+  	}
+
 }
 
 bool sendAllSensorReadings() {
-  
-  Serial.println("Sending all sensor Data");
+
+  	Serial.println("Sending all sensor Data");
 
 	if (!dsh_radio.sendSensorReading("TEMP", 13))
 		return false;
@@ -55,7 +55,7 @@ bool sendAllSensorReadings() {
 	if (!dsh_radio.sendSensorReading("HUM", 25))
 		return false;
 
-   dsh_radio.sendEnd();
-   
+   	dsh_radio.sendEnd();
+
 	return true;
 }

@@ -82,8 +82,8 @@ public:
 	// this must be called after the data is received
 	// TODO: check for receiveDone()
 	bool errorReceived() const { return ERROR_RECEIVED; }
-	bool strReceived() const { return STR_PACKET_RECEIVED && !errorReceived(); }
-	bool sensorDataReceived() const { return SENSOR_DATA_PACKET_RECEIVED && !errorReceived(); }
+	bool stringReceived() const { return STR_PACKET_RECEIVED && !errorReceived(); }
+	bool sensorReadingReceived() const { return SENSOR_DATA_PACKET_RECEIVED && !errorReceived(); }
 
 	bool endReceived() const { return END_RECEIVED; }
 	bool eventReceived() const { return EVENT_RECEIVED; }

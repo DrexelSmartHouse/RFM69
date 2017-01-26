@@ -1,4 +1,3 @@
-
 #include "RFM69_DSH.h"
 
 RFM69_DSH dsh_radio;
@@ -9,7 +8,7 @@ volatile bool receiving = false;
 
 void setup()
 {
-	Serial.begin(9600);
+	Serial.begin(115200);
 
 	dsh_radio.initialize(RF69_915MHZ, GATEWAY_ID, network_id);
 	dsh_radio.setHighPower();
@@ -59,15 +58,15 @@ void loop()
 			Serial.println("Event Received");
 		}
 
-		if (dsh_radio.strReceived()) {
+		if (dsh_radio.stringReceived()) {
 			Serial.println("String Received");
 		}
 
-		if (dsh_radio.sensorDataReceived()) {
+		if (dsh_radio.sensorReadingReceived()) {
 			Serial.print("Sensor Data Received: ");
-			Serial.print(dsh_radio.SENSOR_READING.sensorType);
+			Serial.print(dsh_radio.getSensorType());
 			Serial.print(" : ");
-			Serial.println(dsh_radio.SENSOR_READING.data);
+			Serial.println(dsh_radio.getSensorData());
 		}
 
 		// handle ACK

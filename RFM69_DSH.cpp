@@ -59,9 +59,18 @@ void RFM69_DSH::popStrPacket() {
 		DATA[i] = SPI.transfer(0);
 	}
 
-	RECEIVED_STR = String((const char*)DATA);
+	// set the char at the end to null
+	// just in case the sender forgot
+	// or it was cut off
+	DATA[DATALEN-1] = '\0';
+	
+	// adjust the DATALEN to the new size 
+	// NOTE: DATA will be invalid after this function returns
+	// see RFM69::interruptHandler();
+	DATALEN = 0;
 
-	if (RECEIVED_STR == NULL) receiveFail();
+	RECEIVED_STR = String((const char*)DATA);
+	
 }
 
 void RFM69_DSH::receiveFail() {
@@ -96,7 +105,7 @@ bool RFM69_DSH::sendString(const String& str, uint8_t receiverId, uint8_t CTLbyt
 		str.substring(0, RF69_MAX_DATA_LEN-1);
 	}
 
-	return RFM69_DSH::sendWithRetry(receiverId, str.c_str(), str.length()+1, CTLbyte);
+	return RFM69_DSH::sendWithRetry(receiverId, (const void*) str.c_str(), str.length()+1, CTLbyte);
 }
 
 bool RFM69_DSH::sendError(const String& errorMsg, uint8_t receiverId) {
@@ -190,7 +199,7 @@ void RFM69_DSH::interruptHook(uint8_t CTLbyte) {
 	EVENT_RECEIVED = CTLbyte & RFM69_CTL_EVENT;
 	STR_PACKET_RECEIVED = CTLbyte & RFM69_CTL_STR_PACKET;
 	SENSOR_DATA_PACKET_RECEIVED = CTLbyte & RFM69_CTL_SEN_DATA_PACKET;
-	ERROR_RECEIVED = STR_PACKET_RECEIVED && DATA_REQUESTED;
+	ERROR_RECEIVED = STR_PACKET_RECEIVED && SENSOR_DATA_PACKET_RECEIVED;
 	
 	if (STR_PACKET_RECEIVED) popStrPacket();
 	else if (SENSOR_DATA_PACKET_RECEIVED) popSensorReading();
