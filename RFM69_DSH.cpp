@@ -11,24 +11,6 @@ volatile uint8_t RFM69_DSH::STR_PACKET_RECEIVED;
 volatile uint8_t RFM69_DSH::SENSOR_DATA_PACKET_RECEIVED;
 volatile uint8_t RFM69_DSH::ERROR_RECEIVED;
 
-bool RFM69_DSH::sendSensorReading(const String& sensorType, float data, uint8_t receiverId=GATEWAY_ID) {
-	
-	//convert string into char array
-	char senTypeCharArr[MAX_SENSOR_TYPE_LEN];
-	sensorType.toCharArray(senTypeCharArr, MAX_SENSOR_TYPE_LEN);
-
-	//create a local SensorReading
-	SensorReading senRead;
-	strncpy(senRead.sensorType, senTypeCharArr, strlen(senTypeCharArr)+1);
-	senRead.data = data;
-
-	//Serial.print("The sensor type:");
-	//Serial.println(senRead.sensorType);
-
-	// atmept to send and return the result
-	return RFM69_DSH::sendWithRetry(receiverId, (const void*)(&senRead), sizeof(SensorReading), RFM69_CTL_SEN_DATA_PACKET, 1);
-	
-}
 
 void RFM69_DSH::popSensorReading() {
 	// check to make sure the packet is the right length
@@ -88,12 +70,35 @@ void RFM69_DSH::receiveFail() {
 
 }
 
-bool RFM69_DSH::requestAll(uint8_t nodeId) {
-	return RFM69_DSH::sendWithRetry(nodeId, NULL, 0, RFM69_CTL_DATA_REQ);
+bool RFM69_DSH::sendSensorReading(const String& sensorType, float data, uint8_t receiverId=GATEWAY_ID) {
+	
+	//convert string into char array
+	char senTypeCharArr[MAX_SENSOR_TYPE_LEN];
+	sensorType.toCharArray(senTypeCharArr, MAX_SENSOR_TYPE_LEN);
+
+	//create a local SensorReading
+	SensorReading senRead;
+	strncpy(senRead.sensorType, senTypeCharArr, strlen(senTypeCharArr)+1);
+	senRead.data = data;
+
+	//Serial.print("The sensor type:");
+	//Serial.println(senRead.sensorType);
+
+	// atmept to send and return the result
+	return RFM69_DSH::sendWithRetry(receiverId, (const void*)(&senRead), sizeof(SensorReading), RFM69_CTL_SEN_DATA_PACKET, 1);
+	
 }
 
 bool RFM69_DSH::sendEnd(uint8_t receiverId=GATEWAY_ID) {
 	return RFM69_DSH::sendWithRetry(receiverId, NULL, 0, RFM69_CTL_SEND_END);
+}
+
+bool RFM69_DSH::sendError(const String& errorMsg, uint8_t receiverId=GATEWAY_ID) {
+	return RFM69_DSH::sendString(errorMsg, receiverId, RFM69_CTL_ERROR);
+}
+
+bool RFM69_DSH::sendStrEvent(const String& msg, uint8_t receiverId=GATEWAY_ID) {
+	return RFM69_DSH::sendString(msg, receiverId, RFM69_CTL_EVENT);
 }
 
 bool RFM69_DSH::sendString(const String& str, uint8_t receiverId, uint8_t CTLbyte=RFM69_CTL_STR_PACKET) {
@@ -105,11 +110,15 @@ bool RFM69_DSH::sendString(const String& str, uint8_t receiverId, uint8_t CTLbyt
 		str.substring(0, RF69_MAX_DATA_LEN-1);
 	}
 
-	return RFM69_DSH::sendWithRetry(receiverId, (const void*) str.c_str(), str.length()+1, CTLbyte);
+	return RFM69_DSH::sendWithRetry(receiverId, (const void*) str.c_str(), str.length()+1, CTLbyte | RFM69_CTL_STR_PACKET);
 }
 
-bool RFM69_DSH::sendError(const String& errorMsg, uint8_t receiverId) {
-	return RFM69_DSH::sendString(errorMsg, receiverId, RFM69_CTL_ERROR);
+bool RFM69_DSH::requestAll(uint8_t nodeId) {
+	return RFM69_DSH::sendWithRetry(nodeId, NULL, 0, RFM69_CTL_DATA_REQ);
+}
+
+bool RFM69_DSH::request(const String& sensorType, uint8_t nodeId) {
+	return RFM69_DSH::sendString(sensorType, nodeId, RFM69_CTL_DATA_REQ);
 }
 
 // simple message with no data but request an ack

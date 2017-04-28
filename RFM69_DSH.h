@@ -97,15 +97,18 @@ public:
 	// NOTE: the sensor name has a max length and will get cut off
 	// if it exceeds this length
 	bool sendSensorReading(const String& sensorType, float data, uint8_t receiverId=GATEWAY_ID);
-	bool sendString(const String& str, uint8_t receiverId, uint8_t CTLbyte=RFM69_CTL_STR_PACKET);
 	bool sendEnd(uint8_t receiverId=GATEWAY_ID);
-	bool sendError(const String& errorMsg, uint8_t receiverId);
+
+	bool sendString(const String& str, uint8_t receiverId, uint8_t CTLbyte=RFM69_CTL_STR_PACKET);
+	bool sendError(const String& errorMsg, uint8_t receiverId=GATEWAY_ID);
+	bool sendStrEvent(const String& msg, uint8_t receiverId=GATEWAY_ID);
+	//bool sendSensorEvent(const String& sensorType, float data, uint8_t receiverId=GATEWAY_ID);
 
 	/* requests */
 	
 	// request data. returns true after ack NOT after all data is received
 	bool requestAll(uint8_t nodeId);
-	//bool request(String sensorType, uint8_t nodeId);
+	bool request(const String& sensorType, uint8_t nodeId);
 
 	// sends only one request for ack and returns true if its received
 	bool ping(uint8_t nodeId);
