@@ -1,4 +1,3 @@
-
 #include "RFM69_DSH.h"
 
 RFM69_DSH dsh_radio;
@@ -39,10 +38,10 @@ void loop()
     //if (receiving && dsh_radio.SENDERID == current_node_id) {
        //restartTimer();
     //}
-    
+
     if (dsh_radio.SENDERID != current_node_id && !dsh_radio.eventReceived())
        publishLogMsg("ERROR: OFF TIME " + String(dsh_radio.SENDERID));
-    
+
     else if (dsh_radio.errorReceived()) {
       // format is ERROR: {node id} {error msg}
       publishLogMsg("ERROR: "
@@ -92,12 +91,12 @@ void loop()
     publishLogMsg("ERROR: TIMEOUT NODE: " + String(current_node_id));
     receiving = false;
   }
- 
+
 }
 
 void serialEvent()
 {
-  
+
   String cmd = Serial.readStringUntil('\n');
   cmd.trim();
   cmd.toUpperCase();
@@ -117,18 +116,18 @@ void serialEvent()
   // check for a multpart cmd
   int8_t delim_pos = cmd.indexOf(':');
   if (delim_pos != -1) {
-    
+
     // follows one of two patterns
     // request {node id}:{str request}
     // or event {node id}:EVENT:{str event}
-  
+
     // parse the node id from beginning
     uint8_t node_id = cmd.toInt();
-    
+
     if (node_id != 0) {
       // chop off the number and collon from the front
       cmd = cmd.substring(delim_pos+1);
-      
+
       delim_pos = cmd.indexOf(':');
 
       // check for event
@@ -136,20 +135,20 @@ void serialEvent()
 
         // it is an event so send it
         if (cmd.substring(0, delim_pos) == "EVENT") {
-          //dsh_radio.sendEvent();          
+          //dsh_radio.sendEvent();
           return;
         }
-        
+
       }
 
       // send the
 
-      
-      return;  
+
+      return;
     }
-    
+
   }
-  
+
   // check for SWEEP command
   if (cmd == "SWEEP") {
     startNetworkSweep();
@@ -179,9 +178,9 @@ void serialEvent()
   }
 
   // TODO: parse commands for specfic nodes
-  // they would follow the format {node id}:{request} 
+  // they would follow the format {node id}:{request}
   // NOTE: request == "" and request == "ALL" both mean request all data
-  
+
    publishLogMsg("ERROR: BAD COMMAND");
 }
 
@@ -189,7 +188,7 @@ inline void publishSensorReading()
 {
   // it needs to follow this pattern: /{node id}/{sensor type}:{data}\n
   // example: /1/TEMPC:40.1
-  
+
   Serial.print('/');
   Serial.print(dsh_radio.SENDERID);
   Serial.print('/');
@@ -197,7 +196,7 @@ inline void publishSensorReading()
   Serial.print(':');
   Serial.print(dsh_radio.getSensorData());
   Serial.print('\n');
-  
+
 }
 
 inline void publishLogMsg(String msg)
@@ -217,10 +216,10 @@ inline bool timeOut() {
 
 // use the list of available node to find the next availble id
 bool incrementCurrNodeID() {
-  
+
   while(current_node_id < max_node_id) {
     ++current_node_id;
-    
+
     if (available_nodes[current_node_id])
       return true;
   }
@@ -231,9 +230,9 @@ bool incrementCurrNodeID() {
  // find the next node and request data from it
  // if we are at the end then return false
 inline bool requestAllFromNextNode() {
- 
+
   if (!incrementCurrNodeID()) return false;
-  
+
   //request the all and restart the timer
   if (dsh_radio.requestAll(current_node_id)) {
     receiving = true;
@@ -244,7 +243,7 @@ inline bool requestAllFromNextNode() {
     receiving = false;
     publishLogMsg("ERROR: REQUEST FAILED: " + String(current_node_id));
     return false;
-  } 
+  }
 }
 
 inline void startNetworkSweep()
@@ -254,7 +253,7 @@ inline void startNetworkSweep()
     // set the vars to the initial states
     sweep_mode = true;
     current_node_id = 0;
-    
+
     requestAllFromNextNode();
   } else {
     publishLogMsg("ERROR: BUSY");
