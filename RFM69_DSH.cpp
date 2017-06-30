@@ -24,7 +24,7 @@ void RFM69_DSH::popSensorReading() {
 		DATA[i] = SPI.transfer(0);
 	}
 
-	// adjust the DATALEN to the new size 
+	// adjust the DATALEN to the new size
 	// NOTE: DATA will be invalid after this function returns
 	// see RFM69::interruptHandler();
 	DATALEN -= sizeof(SensorReading);
@@ -36,7 +36,7 @@ void RFM69_DSH::popSensorReading() {
 
 void RFM69_DSH::popStrPacket() {
 
-	// read in all of the bytes of the string 
+	// read in all of the bytes of the string
 	for (uint8_t i = 0; i < DATALEN; i++) {
 		DATA[i] = SPI.transfer(0);
 	}
@@ -45,14 +45,14 @@ void RFM69_DSH::popStrPacket() {
 	// just in case the sender forgot
 	// or it was cut off
 	DATA[DATALEN-1] = '\0';
-	
-	// adjust the DATALEN to the new size 
+
+	// adjust the DATALEN to the new size
 	// NOTE: DATA will be invalid after this function returns
 	// see RFM69::interruptHandler();
 	DATALEN = 0;
 
 	RECEIVED_STR = String((const char*)DATA);
-	
+
 }
 
 void RFM69_DSH::receiveFail() {
@@ -71,7 +71,7 @@ void RFM69_DSH::receiveFail() {
 }
 
 bool RFM69_DSH::sendSensorReading(const String& sensorType, float data, uint8_t receiverId=GATEWAY_ID) {
-	
+
 	//convert string into char array
 	char senTypeCharArr[MAX_SENSOR_TYPE_LEN];
 	sensorType.toCharArray(senTypeCharArr, MAX_SENSOR_TYPE_LEN);
@@ -86,7 +86,7 @@ bool RFM69_DSH::sendSensorReading(const String& sensorType, float data, uint8_t 
 
 	// atmept to send and return the result
 	return RFM69_DSH::sendWithRetry(receiverId, (const void*)(&senRead), sizeof(SensorReading), RFM69_CTL_SEN_DATA_PACKET, 1);
-	
+
 }
 
 bool RFM69_DSH::sendEnd(uint8_t receiverId=GATEWAY_ID) {
@@ -102,9 +102,9 @@ bool RFM69_DSH::sendStrEvent(const String& msg, uint8_t receiverId=GATEWAY_ID) {
 }
 
 bool RFM69_DSH::sendString(const String& str, uint8_t receiverId, uint8_t CTLbyte=RFM69_CTL_STR_PACKET) {
-	
+
 	unsigned int c_str_length = str.length()+1;
-	
+
 	// trim the string if it is too large
 	if (c_str_length > RF69_MAX_DATA_LEN) {
 		str.substring(0, RF69_MAX_DATA_LEN-1);
@@ -209,7 +209,7 @@ void RFM69_DSH::interruptHook(uint8_t CTLbyte) {
 	STR_PACKET_RECEIVED = CTLbyte & RFM69_CTL_STR_PACKET;
 	SENSOR_DATA_PACKET_RECEIVED = CTLbyte & RFM69_CTL_SEN_DATA_PACKET;
 	ERROR_RECEIVED = STR_PACKET_RECEIVED && SENSOR_DATA_PACKET_RECEIVED;
-	
+
 	if (STR_PACKET_RECEIVED) popStrPacket();
 	else if (SENSOR_DATA_PACKET_RECEIVED) popSensorReading();
 

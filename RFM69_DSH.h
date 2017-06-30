@@ -8,20 +8,20 @@
 #define FREQUENCY RF69_915MHZ
 #define ENCRYPTKEY "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
 
-/* CTL byte definitions 
+/* CTL byte definitions
  *
  * RMF69 defaults:
- * 
+ *
  * 0x80 - send ack, lib defined
  *
  * 0x40 - request ack, lib defined
- * 
+ *
  * Custom:
- * 
+ *
  * 0x20 - REQ, this packet contains a request. Response is either
  * 		  data or and error. The response must be terminated with
- * 		  a END packet. 
- * 		  NOTE: Empty request means all data. 
+ * 		  a END packet.
+ * 		  NOTE: Empty request means all data.
  *
  * 0x10 - END, this is an empty packet the marks the
  * 		  end of a variable length response
@@ -68,17 +68,17 @@ struct SensorReading {
 
 class RFM69_DSH: public RFM69 {
 public:
-	
+
 	// original constructor with RFM69HW as the default
 	RFM69_DSH(uint8_t slaveSelectPin=RF69_SPI_CS, uint8_t interruptPin=RF69_IRQ_PIN, bool isRFM69HW=true, uint8_t interruptNum=RF69_IRQ_NUM) :
 		RFM69(slaveSelectPin, interruptPin, isRFM69HW, interruptNum) {
 	}
 
 	//TODO easy to use init functions for gateway and sensor node
-	
+
 
 	/* Receiving */
-	
+
 	// this must be called after the data is received
 	// TODO: check for receiveDone()
 	bool errorReceived() const { return ERROR_RECEIVED; }
@@ -93,19 +93,18 @@ public:
 
 
 	/* Sending data */
-	
+
 	// NOTE: the sensor name has a max length and will get cut off
 	// if it exceeds this length
 	bool sendSensorReading(const String& sensorType, float data, uint8_t receiverId=GATEWAY_ID);
 	bool sendEnd(uint8_t receiverId=GATEWAY_ID);
-
 	bool sendString(const String& str, uint8_t receiverId, uint8_t CTLbyte=RFM69_CTL_STR_PACKET);
 	bool sendError(const String& errorMsg, uint8_t receiverId=GATEWAY_ID);
 	bool sendStrEvent(const String& msg, uint8_t receiverId=GATEWAY_ID);
 	//bool sendSensorEvent(const String& sensorType, float data, uint8_t receiverId=GATEWAY_ID);
 
 	/* requests */
-	
+
 	// request data. returns true after ack NOT after all data is received
 	bool requestAll(uint8_t nodeId);
 	bool request(const String& sensorType, uint8_t nodeId);
@@ -121,7 +120,7 @@ public:
 	static volatile uint8_t STR_PACKET_RECEIVED;
 	static volatile uint8_t SENSOR_DATA_PACKET_RECEIVED;
 	static volatile uint8_t ERROR_RECEIVED;
-	
+
 	// vars to hold the received data
 	String RECEIVED_STR;
 	SensorReading SENSOR_READING;
@@ -146,13 +145,13 @@ protected:
 
 	// override the interruptHook
 	virtual void interruptHook(uint8_t CTLbyte);
-	
+
 	void send(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte);
 
 	// sendFrame function for sending different CTL bits
 	void sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte);
 
-	// allows for custom CTL injection  
+	// allows for custom CTL injection
 	bool sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte, uint8_t retries=2, uint8_t retryWaitTime=40);
 //private:
 
