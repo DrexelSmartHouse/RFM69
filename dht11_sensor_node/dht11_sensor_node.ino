@@ -3,7 +3,7 @@
 
 RFM69_DSH dsh_radio;
 
-const uint8_t node_id = 3;
+const uint8_t node_id = 14;
 const uint8_t network_id = 0;
 
 const uint8_t DHT11_pin = 4;
@@ -11,6 +11,9 @@ byte temp = -1;
 byte humidity = -1;
 
 SimpleDHT11 dht11;
+
+//var for time
+long previous_time = 0;
 
 enum request_types {
   ALL,
@@ -20,25 +23,25 @@ enum request_types {
   NONE
 };
 
-volatile request_types current_request = NONE;
+request_types current_request = NONE;
 
 void setup()
 {
 	Serial.begin(115200);
 
 	dsh_radio.initialize(RF69_915MHZ, node_id, network_id);
-	dsh_radio.setHighPower(false);
+	dsh_radio.setHighPower();
 
 }
 
 void loop()
 {
-
+  
 	if (dsh_radio.receiveDone()) {
 
 		Serial.println("Transmission Received");
 
-
+		
     if (dsh_radio.requestReceived()) {
       if (dsh_radio.requestAllReceived())
         current_request = ALL;
@@ -49,14 +52,14 @@ void loop()
       else
         current_request = BAD_REQUEST;
     }
-
+    
 		if (dsh_radio.ACKRequested()) {
 			dsh_radio.sendACK();
 			Serial.println("ACK sent");
 		}
-
+   
 	}
-
+ 
   switch(current_request) {
     case NONE:
       break;
@@ -65,7 +68,7 @@ void loop()
       dsh_radio.sendError("BAD REQUEST");
       current_request = NONE;
       break;
-
+    
     case ALL:
       dht11.read(DHT11_pin, &temp, &humidity, NULL);
       Serial.println("Sending all sensor Data");
@@ -83,11 +86,11 @@ void loop()
         current_request = NONE;
         break;
       }
-
+      
       dsh_radio.sendEnd();
       current_request = NONE;
       break;
-
+       
     case TEMPC:
       dht11.read(DHT11_pin, &temp, &humidity, NULL);
       if (!dsh_radio.sendSensorReading("TEMPC", temp))
@@ -95,7 +98,7 @@ void loop()
       dsh_radio.sendEnd();
       current_request = NONE;
       break;
-
+      
     case HUM:
       dht11.read(DHT11_pin, &temp, &humidity, NULL);
       if (!dsh_radio.sendSensorReading("HUM", humidity))
@@ -104,11 +107,13 @@ void loop()
       current_request = NONE;
       break;
 
-
+    
     default:
       current_request = NONE;
-
+ 
   }
 
+  
+  
 }
 
