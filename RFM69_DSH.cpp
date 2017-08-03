@@ -127,7 +127,7 @@ bool RFM69_DSH::ping(uint8_t nodeId) {
 	return RFM69::sendWithRetry(nodeId, NULL, 0, 1);
 }
 
-bool RFM69_DSH::sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte, uint8_t retries=2, uint8_t retryWaitTime=40) {
+bool RFM69_DSH::sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte, uint8_t retries=0, uint8_t retryWaitTime=80) {
 
   	uint32_t sentTime;
 

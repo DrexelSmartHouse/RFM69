@@ -151,8 +151,8 @@ protected:
 	// sendFrame function for sending different CTL bits
 	void sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte);
 
-	// allows for custom CTL injection
-	bool sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte, uint8_t retries=2, uint8_t retryWaitTime=40);
+	// allows for custom CTL injection  
+	bool RFM69_DSH::sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t CTLbyte, uint8_t retries=0, uint8_t retryWaitTime=80);
 //private:
 
 };
